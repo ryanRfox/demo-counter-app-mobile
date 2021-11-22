@@ -18,7 +18,10 @@ def approval_program():
 
    handle_noop = Cond(
        [And(
-           Global.group_size() == Int(2) 
+           Global.group_size() == Int(2),
+           Gtxn[0].type_enum() == TxnType.ApplicationCall,
+           Gtxn[1].receiver() == Addr("GD64YIY3TWGDMCNPP553DZPPR6LDUSFQOIJVFDPPXWEG3FVOJCCDBBHU5A"),
+           Gtxn[1].amount() > Int(0),
        ), Seq([
             scratchCount.store(App.globalGet(Bytes("Count"))),
             App.globalPut(Bytes("Count"), scratchCount.load() + Int(1)),

@@ -94,26 +94,26 @@ def call_app(client, private_key, index, app_args) :
     params = client.suggested_params()
 
     # create unsigned transaction
-    txn1 = transaction.ApplicationNoOpTxn(sender, params, index, app_args)
-    txn2 = transaction.PaymentTxn(sender, params, receiver, amount)
+    app_call_txn = transaction.ApplicationNoOpTxn(sender, params, index, None)
+    pay_txn = transaction.PaymentTxn(sender, params, receiver, amount)
 
     # get group id and assign it to transactions
-    gid = transaction.calculate_group_id([txn1, txn2])
-    txn1.group = gid
-    txn2.group = gid
+    gid = transaction.calculate_group_id([app_call_txn, pay_txn])
+    app_call_txn.group = gid
+    pay_txn.group = gid
 
     # sign transactions
-    stxn1 = txn1.sign(private_key)
-    stxn2 = txn1.sign(private_key)
-    tx_id = stxn1.transaction.get_txid()
+    signed_app_call_tnx = app_call_txn.sign(private_key)
+    signed_pay_txn = pay_txn.sign(private_key)
+    tx_id = signed_app_call_tnx.transaction.get_txid()
 
     # send transactions
-    client.send_transactions([stxn1, stxn2])
+    client.send_transactions([signed_app_call_tnx, signed_pay_txn])
 
     # await confirmation
     wait_for_confirmation(client, tx_id, 5)
 
-    print("Application called")
+    print("Application call successful")
     
 def main() :
     # initialize an algodClient
@@ -124,8 +124,7 @@ def main() :
 
     print("--------------------------------------------")
     print("Calling Counter Application ({})......".format(app_id))
-    app_args = ["Add"]
-    call_app(algod_client, creator_private_key, app_id, app_args)
+    call_app(algod_client, creator_private_key, app_id, None)
 
     # read global state of application
     print("Global state:", read_global_state(algod_client, account.address_from_private_key(creator_private_key), app_id))
